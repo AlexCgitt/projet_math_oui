@@ -172,9 +172,6 @@ def nb_wagons_offline_d1(marchandises, wagon_longueur=11.583):
             wagons.append([i["Longueur"]])
     return len(wagons)
 
-#Affichage du résultat pour le mode Off line et d1
-nombre_wagons = nb_wagons_offline_d1(marchandises)
-
 '''
 d1 = prise en compte seulement de la longueur des marchandises.
 d1 = Marchandises = segments de droite #  non côte à côte, non superposer.
@@ -198,15 +195,12 @@ def nb_wagons_online_d1(dico, wagon_longueur=11.583):
     for i in dico:
         for j in wagons:
             if sum(j) + i["Longueur"] <= wagon_longueur:
-                j.append(i["Longueur"])
+                j.append(i["Longueur"])# on ajoute la longueur de l'objet dans le wagon
                 break
         else:
-            wagons.append([i["Longueur"]])
-    return len(wagons)
+            wagons.append([i["Longueur"]]) # il y a [i["Longueur"]] car on ne peut pas mettre un int dans une liste donc ce qui rentre dans la liste est une liste
+    return len(wagons), wagons
 
-#Affichage du résultat pour le mode On line et d1
-nombre_wagons = nb_wagons_online_d1(marchandises)
-print("En mode On line et d1, le nombre de wagons que l'on doit utiliser pour transporter les marchandises est:", nombre_wagons)
 
 
 '''
@@ -229,34 +223,32 @@ et d'utiliser la méthode Best Fit pour placer les objets dans les wagons en uti
 
 Algorithme Shelf First Fit Decreasing :
 
-1. Trier les marchandise par leurs largeur en ordre décroissant. je place les marchandise qui prennent le plus de place en premier.
+1. Trier les marchandise par leurs largeurs et longueurs en ordre décroissant. je place les marchandise qui prennent le plus de place en premier.
 2. Initialiser une liste de wagons vide.
 3. Pour chaque marchandise triée, je parcours la liste des wagons existants
 4. Pour chaque wagon, je parcours les étagères existantes
-5. Je vérifie si la marchandise rentre sur une étagère existante c'est à dire que j'observe la largeur et la longueur de l'étagère restante (la largeur de l'étagère est celle de la marchandise ayant la largeur max et la longueur de l'étagère correspond à la longueur de mon wagon) et je compare avec la largeur et la longueur de la marchandise
-6. Si la marchandise à une longueur inférieur à l'étagère, je place la marchandise sur l'étagère
+5. Je vérifie si la marchandise rentre sur une étagère existante c'est à dire que j'observe la largeur et la longueur de l'étagère (la largeur de l'étagère est celle de la marchandise ayant la largeur max et la longueur de l'étagère correspond à la longueur des objets qu'elle possède + l'objet qu'on souhaite placer et il faut qu'il reste inférieur ou égale a la longueur du wagon)
+6. Si la marchandise à une largeur inférieur à l'étagère, et que l'addition de sa longueur à celle de l'étagère est inférieur ou égale à la longueur du wagon alors on l'ajoute à l'étagère
 6. Si la marchandise ne rentre pas sur une étagère existante, je vérifie si la marchandise rentre dans le wagon
-7. Je vérifie que la somme de la largeur de mes étagère est inférieur à la largeur de mon wagon - la largeur de ma marchandise.
-8. Si c'est le cas, je crée une nouvelle étagère dans le wagon et j'y place la marchandise cette nouvelle étagère sera au dessus de la dernière étagère créée et prendra comme longueur la longueur du wagon et comme largeur la largeur de la marchandise.
-8. Si on ne peut plus placer d'étagère dans le wagon, je crée un nouveau wagon et j'y place la marchandise ainsi qu'une étagère ayant pour longueur la longueur du wagon et pour largeur la largeur de la marchandise.
+7. Je vérifie que la somme de la largeur de mes étagère + la largeur de ma marchandise est inférieur à la largeur de mon wagon .
+8. Si c'est le cas, je crée une nouvelle étagère dans le wagon et j'y place la marchandise cette nouvelle étagère sera au dessus de la dernière étagère créée et prendra comme longueur la longueur de l'item et comme largeur la largeur de la marchandise.
+8. Si on ne peut plus placer d'étagère dans le wagon, je crée un nouveau wagon et j'y place la marchandise ainsi qu'une étagère ayant pour longueur la longueur de la marchandise et pour largeur la largeur de la marchandise.
 9. Je retourne le nombre de wagon utilisé.
 '''              
-import matplotlib.pyplot as plt
-import random
-import math
 
 def nb_wagons_offline_d2(dico, wagon_longueur=11.583, wagon_largeur=2.294):
-    wagons = []
-    dico = sorted(dico, key=lambda x: (x["Largeur"], x["Longueur"]), reverse=True)
+    wagons = [] # initialisation a vide qui va nous permettre de stocker les wagons et leurs contenus
+    #wagon est une liste et chaque élément de cette liste est un dictionnaire qui contient la longueur, la largeur et les items de l'étagère
+    dico = sorted(dico, key=lambda x: (x["Largeur"], x["Longueur"]), reverse=True)# tri des marchandises par largeur et longueur en ordre décroissant
     
-    for item in dico:  # Parcours des marchandises
-        placed = False
+    for item in dico:  # Parcours de chaque marchandise du dico
+        placed = False # initialisation de la variable placed à False
         for wagon in wagons:  # Parcours des wagons
             for shelf in wagon:  # Parcours des étagères dans un wagon
-                if item["Largeur"] <= shelf["Largeur"] and (shelf["Longueur"] + item["Longueur"]) <= wagon_longueur:
+                if item["Largeur"] <= shelf["Largeur"] and (shelf["Longueur"] + item["Longueur"]) <= wagon_longueur: #Si la largeur de l'item est inférieure ou égale à la largeur de l'étagère et sa longueur plus la longueur actuelle de l'étagère est inférieure ou égale à la longueur du wagon alors on l'ajoute à l'étagère
                     # Ajout de l'item à l'étagère existante
-                    shelf["Longueur"] += item["Longueur"]
-                    shelf["Items"].append(item)
+                    shelf["Longueur"] += item["Longueur"] # on ajoute la longueur de l'item à la longueur de l'étagère
+                    shelf["Items"].append(item) # on ajoute l'item à la liste des items de l'étagère
                     placed = True
                     break
             if placed:
@@ -307,52 +299,64 @@ def nb_wagons_online_d2(dico, wagon_longueur=11.583, wagon_largeur=2.294):
     return len(wagons)
 
 # Affichage
-print("En mode On line et d2, le nombre de wagons que l'on doit utiliser pour transporter les marchandises est:", nb_wagons_online_d2(marchandises))
 
 
-
-def show_wagons_2d(wagons: list, contenair_length: float, contenair_width: float) -> None:
-    num_wagons = len(wagons)
-    cols = math.ceil(math.sqrt(num_wagons))
-    rows = math.ceil(num_wagons / cols)
+'''
+A décommenter pour afficher les résultats
+ctrl + / 
+lorsque vous souhaiterez tester les autres fonctions
+'''
+# def show_wagons_2d(wagons: list, contenair_length: float, contenair_width: float) -> None:
+#     num_wagons = len(wagons)
+#     cols = math.ceil(math.sqrt(num_wagons))
+#     rows = math.ceil(num_wagons / cols)
     
-    _, axes = plt.subplots(rows, cols, figsize=(15, 10))
+#     fig, axes = plt.subplots(rows, cols, figsize=(15, 10))
     
-    if rows > 1:
-        axes = axes.flatten()
-    else:
-        axes = [axes]
+#     if rows > 1 or cols > 1:
+#         axes = axes.flatten()
+#     else:
+#         axes = [axes]
     
-    for i, (wagon, ax) in enumerate(zip(wagons, axes)):
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_xlim(0, contenair_length)
-        ax.set_ylim(0, contenair_width)
-        ax.set_aspect('equal')
+#     for i, (wagon, ax) in enumerate(zip(wagons, axes)):
+#         ax.set_xticks([])
+#         ax.set_yticks([])
+#         ax.set_xlim(0, contenair_length)
+#         ax.set_ylim(0, contenair_width)
+#         ax.set_aspect('equal')
+#         ax.set_title(f'Wagon {i + 1}')
         
-        y_offset = 0
+#         y_offset = 0
         
-        for shelf in wagon:
-            x_offset = 0
-            shelf_height = shelf["Largeur"]
-            for item in shelf["Items"]:
-                color = random.choice(['r', 'g', 'b', 'c', 'm', 'y', 'k'])
-                ax.add_patch(plt.Rectangle((x_offset, y_offset), item["Longueur"], item["Largeur"], alpha=0.5, color=color))
-                x_offset += item["Longueur"]
+#         for shelf in wagon:
+#             x_offset = 0
+#             shelf_height = shelf["Largeur"]
+#             for item in shelf["Items"]:
+#                 color = random.choice(['r', 'g', 'b', 'c', 'm', 'y', 'k'])
+#                 ax.add_patch(plt.Rectangle((x_offset, y_offset), item["Longueur"], item["Largeur"], alpha=0.5, color=color, label=item["Désignation"]))
+#                 x_offset += item["Longueur"]
             
-            y_offset += shelf_height
+#             y_offset += shelf_height
     
-    for j in range(i + 1, len(axes)):
-        axes[j].axis('off')
+#     for j in range(i + 1, len(axes)):
+#         axes[j].axis('off')
     
-    plt.tight_layout()
-    plt.show()
+#     handles, labels = ax.get_legend_handles_labels()
+#     fig.legend(handles, labels, loc='upper right')
+    
+#     plt.tight_layout()
+#     plt.show()
 
-# Calcul du nombre de wagons et leur contenu
-details_wagons = nb_wagons_offline_d2(marchandises)
+# # Exemple d'utilisation
+# details_wagons, num_wagons = nb_wagons_offline_d2(marchandises)
 
-# Utilisation de la fonction pour afficher les wagons
-show_wagons_2d(details_wagons, 11.583, 2.294)
+# show_wagons_2d(details_wagons, 11.583, 2.294)
+
+
+
+
+
+
 
 
 """Question 2"""
@@ -368,8 +372,14 @@ du temps de calcul en fonction de la taille des données en entrée."""
 (complexité au pire, borne supérieure ...)"""
 
 wagon_offline_d1 = nb_wagons_offline_d1(marchandises)
-wagon_online_d1 = nb_wagons_online_d1(marchandises)
+wagon_online_d1, wagon_detail = nb_wagons_online_d1(marchandises)
 print(f"Le nombre de wagons pour d = 1 en offline : {wagon_offline_d1}")
 print(f"Le nombre de wagons pour d = 1 en online : {wagon_online_d1}\n")
-#print(f"Le nombre de wagons pour d = 2 en offline : {wagon_offline_d2}")
-# Calcul du nombre de wagons et leur contenu
+print(f"Voici le contenu des wagons pour d = 1 en oline : {wagon_detail}\n\n")
+
+wagon_offline_d2, wagon_detail = nb_wagons_offline_d2(marchandises)
+wagon_online_d2 = nb_wagons_online_d2(marchandises)
+print(f"Le nombre de wagons pour d = 2 en offline : {wagon_detail}")
+print(f"Le nombre de wagons pour d = 2 en online : {wagon_online_d2}\n")
+print(f"Voici le contenu des wagons pour d = 2 en offline : {wagon_offline_d2}\n\n")
+
