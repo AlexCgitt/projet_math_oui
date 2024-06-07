@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import random
+import time
 
 '''
 Partie 2
@@ -353,6 +354,112 @@ lorsque vous souhaiterez tester les autres fonctions
 # show_wagons_2d(details_wagons, 11.583, 2.294)
 
 
+'''
+d3 = volume occupé par marchandise
+d3 on peut les empiler si on veut
+d3 = longueur + largeur + hauteur
+
+On line = marchandises ne peuvent pas être triées
+marchandise = premier arrivé premier affectée (pile)
+Off line = trier les marchandises avant de les charger dans les conteneurs
+
+conteneurs longueur = 11,583 mètres
+conteneurs largeur = 2,294 mètres
+conteneurs hauteur = 2,294 mètres
+
+continuer avec la méthode Shelf First Fit Decreasing pour d = 3
+
+Algorithme Shelf First Fit Decreasing :
+
+1.Trier les marchandises par volume (largeur * longueur * hauteur) en ordre décroissant.
+2.Initialiser une liste de wagon vide
+3.Parcourir chaque marchandise triée    
+4.Pour chaque marchandise triée, parcourir la liste des wagons existants
+5.Pour chaque wagon, parcourir les couches existantes (les couches sont les différents niveaux definis par la largeur d'un objet comme fais en d2)
+6.Pour chaque couche, parcourir les étagères existantes (les étagères sont dans chaque niveau de couche, elles sont côte à côte via la hauteur (profondeur), plusieurs étagères les unes a coté des autres en 3D)
+7.Si la marchandise à une largeur inférieur à l'étagère, que l'addition de sa longueur à celle de l'étagère est inférieur ou égale à la longueur du wagon et que la hauteur de la marchandise est inférieur ou égale à la hauteur de l'étagère alors on l'ajoute à l'étagère
+8.Si la marchandise ne rentre pas dans l'étagère on crée une nouvelle étagère en hauteur et on l'ajoute à la couche
+9.Si on ne peut plus placer d'étagère dans la couche, on crée une nouvelle couche
+10.Si on ne peut plus placer de couche dans le wagon, on crée un nouveau wagon
+11.Retourner le nombre de wagons utilisés
+'''
+
+
+def nb_wagons_offline_d3(dico, wagon_longueur=11.583, wagon_largeur=2.294, wagon_hauteur=2.569):
+    wagons = []  # Initialisation de la liste des wagons
+    dico = sorted(dico, key=lambda x: (x["Largeur"] * x["Longueur"] * x["Hauteur"]), reverse=True)  # Tri des marchandises par volume décroissant
+
+    for item in dico:  # Parcours des marchandises triées
+        placed = False  # Initialisation de la variable pour vérifier si l'item a été placé
+        for wagon in wagons:  # Parcours des wagons
+            for couche in wagon:  # Parcours des couches dans un wagon
+                for shelf in couche:  # Parcours des étagères dans une couche
+                    if item["Largeur"] <= shelf["Largeur"] and (shelf["Longueur"] + item["Longueur"]) <= wagon_longueur and item["Hauteur"] <= shelf["Hauteur"]:
+                        # Ajout de l'item à l'étagère existante
+                        shelf["Longueur"] += item["Longueur"]
+                        shelf["Items"].append(item)
+                        placed = True
+                        break
+                if placed:
+                    break
+                # Si la marchandise ne rentre pas dans les étagères existantes, création d'une nouvelle étagère
+                total_shelf_width = sum(s["Largeur"] for s in couche)
+                if (total_shelf_width + item["Largeur"]) <= wagon_largeur:
+                    couche.append({"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]})
+                    placed = True
+                    break
+            if placed:
+                break
+            # Si la marchandise ne rentre pas dans les couches existantes, création d'une nouvelle couche
+            total_couche_height = sum(max(s["Hauteur"] for s in couche) for couche in wagon)
+            if (total_couche_height + item["Hauteur"]) <= wagon_hauteur:
+                wagon.append([{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}])
+                placed = True
+                break
+        if not placed:
+            # Si la marchandise ne rentre pas dans les wagons existants, création d'un nouveau wagon
+            wagons.append([[{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}]])
+
+    return wagons, len(wagons)
+
+
+
+
+def nb_wagons_online_d3(dico, wagon_longueur=11.583, wagon_largeur=2.294, wagon_hauteur=2.569):
+    wagons = []  # Initialisation de la liste des wagons
+
+    for item in dico:  # Parcours des marchandises triées
+        placed = False  # Initialisation de la variable pour vérifier si l'item a été placé
+        for wagon in wagons:  # Parcours des wagons
+            for couche in wagon:  # Parcours des couches dans un wagon
+                for shelf in couche:  # Parcours des étagères dans une couche
+                    if item["Largeur"] <= shelf["Largeur"] and (shelf["Longueur"] + item["Longueur"]) <= wagon_longueur and item["Hauteur"] <= shelf["Hauteur"]:
+                        # Ajout de l'item à l'étagère existante
+                        shelf["Longueur"] += item["Longueur"]
+                        shelf["Items"].append(item)
+                        placed = True
+                        break
+                if placed:
+                    break
+                # Si la marchandise ne rentre pas dans les étagères existantes, création d'une nouvelle étagère
+                total_shelf_width = sum(s["Largeur"] for s in couche)
+                if (total_shelf_width + item["Largeur"]) <= wagon_largeur:
+                    couche.append({"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]})
+                    placed = True
+                    break
+            if placed:
+                break
+            # Si la marchandise ne rentre pas dans les couches existantes, création d'une nouvelle couche
+            total_couche_height = sum(max(s["Hauteur"] for s in couche) for couche in wagon)
+            if (total_couche_height + item["Hauteur"]) <= wagon_hauteur:
+                wagon.append([{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}])
+                placed = True
+                break
+        if not placed:
+            # Si la marchandise ne rentre pas dans les wagons existants, création d'un nouveau wagon
+            wagons.append([[{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}]])
+
+    return wagons, len(wagons)
 
 
 
@@ -364,6 +471,49 @@ lorsque vous souhaiterez tester les autres fonctions
 """Evaluerez la complexité de votre algorithme. Un usage de la librairie time pour représenter le temps
 de calcul en fonction du nombre de marchandises serait un bon début pour représenter l’évolution
 du temps de calcul en fonction de la taille des données en entrée."""
+
+def mesure_temps(fonction, *args, **kwargs):
+#*args on l'utilise pour une liste d'arguments non nommés
+#**kwargs permet de passer un nombre variable d'arguments nommés à une fonction (a=1, b=2, c=3) ce qui va donc nous permettre d'envoyer notre dictionnaire d'objets
+#https://deusyss.developpez.com/tutoriels/Python/args_kwargs/
+
+    # Mesure le temps d'une seule exécution pourra nous servir plus tard
+    #on reprend ce qu'on a fait en IA pour calculer le temps d'execution de notre fonction
+    start = time.time()
+    fonction(*args, **kwargs)
+    end = time.time()
+    temps_single = end - start
+
+    # or cette mesure peut ne pas être très précise car le temps d'exécution est très court
+    # on va donc effectuer 1000 répétitions pour obtenir un temps d'exécution plus significatif
+    # a mettre en comment pour les fonctions plus complexes
+    repetitions = 10000
+    start = time.time()
+    for _ in range(repetitions):
+        fonction(*args, **kwargs)
+    end = time.time()
+    temps_multiple = (end - start) / repetitions
+
+    return temps_single, temps_multiple
+
+# Mesure du temps pour chaque fonction
+temps_d1_single, temps_d1_multiple = mesure_temps(nb_wagons_offline_d1, marchandises)
+print(f"Temps d'exécution pour nb_wagons_offline_d1: {temps_d1_single:.6f}, {temps_d1_multiple:.6f} secondes")
+
+temps_d1_o_single, temps_d1_o_multiple = mesure_temps(nb_wagons_online_d1, marchandises)
+print(f"Temps d'exécution pour nb_wagons_online_d1: {temps_d1_o_single:.6f}, {temps_d1_o_multiple:.6f} secondes")
+
+temps_d2_single, temps_d2_multiple = mesure_temps(nb_wagons_offline_d2, marchandises)
+print(f"Temps d'exécution pour nb_wagons_offline_d2: {temps_d2_single:.6f}, {temps_d2_multiple:.6f} secondes")
+
+temps_d2_o_single, temps_d2_o_multiple = mesure_temps(nb_wagons_online_d2, marchandises)
+print(f"Temps d'exécution pour nb_wagons_online_d2: {temps_d2_o_single:.6f}, {temps_d2_o_multiple:.6f} secondes")
+
+time_d3_offline, result_d3_offline = mesure_temps(nb_wagons_offline_d3, marchandises)
+print(f"Temps d'exécution pour nb_wagons_offline_d3: {time_d3_offline:.6f}, {result_d3_offline:.6f} secondes")
+
+temps_d3_o_single, temps_d3_o_multiple = mesure_temps(nb_wagons_online_d3, marchandises)
+print(f"Temps d'exécution pour nb_wagons_online_d3: {temps_d3_o_single:.6f}, {temps_d3_o_multiple:.6f} secondes \n\n")
 
 
 """Question 3"""
@@ -383,3 +533,10 @@ print(f"Le nombre de wagons pour d = 2 en offline : {wagon_detail}")
 print(f"Le nombre de wagons pour d = 2 en online : {wagon_online_d2}\n")
 print(f"Voici le contenu des wagons pour d = 2 en offline : {wagon_offline_d2}\n\n")
 
+
+details_wagons, num_wagons = nb_wagons_offline_d3(marchandises)
+print(f"Le nombre de wagons pour d = 3 en offline : {num_wagons}")
+#print(f"Voici le contenu des wagons pour d = 3 en offline : {details_wagons}")
+details_wagons, num_wagons = nb_wagons_online_d3(marchandises)
+print(f"Le nombre de wagons pour d = 3 en online : {num_wagons}")
+#print(f"Voici le contenu des wagons pour d = 3 en offline : {details_wagons}")

@@ -74,6 +74,8 @@ objets_2 = [
     {"Nom": "Bouchon valve chromé bleu", "Masse": 0.01, "Utilité": 0.1}
 ]
 
+t = 10 ** -6  # On fixe une constante d'exécution égale à 1 microseconde pour chaque opération
+
 '''
 -----------------------------------------
 #question 1
@@ -299,21 +301,109 @@ On va pouvoir abordé plusieurs solutions mais commençons par la plus simple : 
 print("\n\n-------------------QUESTION 7,8,9:----------------------\n\n")
 
 #fonction qui calcule l'utilité totale d'une sélection d'objets, dans notre cas une liste.
-def utilite_totale(selection):
+def utilite_totale(selection, temps):
+    utilite = 0 #On initialise la variable utilité à 0 qui accumulera l'utilité totale des objets
+    temps += t
+    for objet in selection:
+        temps += t
+        utilite += objet["Utilité"]#pour chque objet dans notre selection, on va ajouter la valeur de l'utilité de l'objet à notre variable utilité
+        temps += 2*t
+    return utilite
+
+#fonction qui calcule la masse totale d'une sélection d'objets, dans notre cas, une liste.
+def masse_totale(selection, temps):
+    masse = 0 #On initialise la variable masse à 0 qui accumulera la masse totale des objets
+    temps += t
+    for objet in selection:
+        temps += t
+        masse += objet["Masse"]#pour chaque objet dans notre selection, on va ajouter la valeur de la masse de l'objet à notre variable masse
+        temps += 2*t
+    return masse
+
+#foncion itérative de force brute
+def force_brute(objets, c):
+    temps_final = 0
+    nbre = len(objets) #nbre est le nombre total d'objets dans notre liste
+    temps_final += t
+    possibility = 2 ** nbre #on la montré dans la question 1 2**n , c'est le nombre de combinaison possible. 
+    temps_final += 2*t
+    meilleure_combinaison = [] #est initialisée comme une liste vide qui contiendra la meilleure combinaison d'objets trouvée
+    temps_final += t
+
+    for x in range(possibility): # on va parcourir toutes les combinaisons possibles de 0 à possibility(2^nbre)
+        temps_final += t
+        chaine = bin(x)[2:] #on convertit x (le numéro d'itération actuel) en binaire et on enlève les 2 premiers caractères (0b) pour obtenir une chaine de caractère
+        temps_final += t
+        long = len(chaine) # va calculer la longueur de la chaine 
+        temps_final += t
+        if long < nbre:
+            temps_final += t
+            chaine = (nbre - long) * '0' + chaine # Si la longueur de la chaine est inférieure au nombre d'objets, on ajoute des 0 devant pour avoir une chaine de la bonne longueur
+            temps_final += 4*t
+
+        combinaison = []#initialise une liste vide qui contiendra la combinaison d'objets actuelle
+        temps_final += t
+        #chaque suite binaire va représenter une combinaison d'objets
+        #on parcours donc chaque caractère de la chaine binaire
+        #on verifie si le caractère est un 1, si c'est le cas on ajoute l'objet correspondant à la position actuelle dans la liste d'objets
+        for i in range(nbre):
+            temps_final += t
+            if chaine[i] == '1':
+                temps_final += t
+                combinaison.append(objets[i])
+                temps_final += t
+        #on compare ensuite la combinaison actuelle à la meilleure combinaison trouvée jusqu'à présent
+        if utilite_totale(combinaison, temps_final) > utilite_totale(meilleure_combinaison, temps_final):
+            temps_final += t
+            #si la combinaison actuelle est meilleure, on la remplace par la meilleure combinaison
+            if masse_totale(combinaison, temps_final) <= (c+0.0000000000000001): #on ajoute une petite marge d'erreur pour éviter les erreurs d'arrondi car en python les nombres flottants ne sont pas toujours exacts
+                temps_final += t
+                meilleure_combinaison = combinaison
+                temps_final += t
+
+    return meilleure_combinaison, temps_final
+
+
+# start_exact = time.time()
+# meilleure_combinaison = force_brute(objets_2, 0.6)
+# end_exact = time.time()
+# noms_objets = [objet["Nom"] for objet in meilleure_combinaison]
+# utilite_max = utilite_totale(meilleure_combinaison)
+# new_weight = masse_totale(meilleure_combinaison)
+
+# print(f"\n\nMeilleure combinaison d'objets: {noms_objets}")
+# print(f"Utilité totale: {utilite_max}")
+# print(f"Poids total: {new_weight} \n")
+
+# temps_A_exact = end_exact - start_exact
+
+# print(f"Temps d'exécution de l'algorithme A: {temps_A_exact} secondes\n\n")
+
+
+# temps_single = mesure_temps(force_brute, objets_2, 0.6)
+# print(f"Temps pour une seule exécution: {temps_single} secondes")
+# print(f"Temps moyen avec répétition exécutions: {temps_multiple} secondes\n\n")
+# environ 15.3 seconde varie en fonction des pc 33 seconde pour lea
+
+
+#-------------------------------------------------------original version -------------------------------------------------------
+
+#fonction qui calcule l'utilité totale d'une sélection d'objets, dans notre cas une liste.
+def utilite_totale2(selection):
     utilite = 0 #On initialise la variable utilité à 0 qui accumulera l'utilité totale des objets
     for objet in selection:
         utilite += objet["Utilité"]#pour chque objet dans notre selection, on va ajouter la valeur de l'utilité de l'objet à notre variable utilité
     return utilite
 
 #fonction qui calcule la masse totale d'une sélection d'objets, dans notre cas, une liste.
-def masse_totale(selection):
+def masse_totale2(selection):
     masse = 0#On initialise la variable masse à 0 qui accumulera la masse totale des objets
     for objet in selection:
         masse += objet["Masse"]#pour chaque objet dans notre selection, on va ajouter la valeur de la masse de l'objet à notre variable masse
     return masse
 
 #foncion itérative de force brute
-def force_brute(objets, c):
+def force_brute2(objets, c):
     nbre = len(objets) #nbre est le nombre total d'objets dans notre liste
     possibility = 2 ** nbre #on la montré dans la question 1 2**n , c'est le nombre de combinaison possible. 
     meilleure_combinaison = [] #est initialisée comme une liste vide qui contiendra la meilleure combinaison d'objets trouvée
@@ -332,20 +422,20 @@ def force_brute(objets, c):
             if chaine[i] == '1':
                 combinaison.append(objets[i])
         #on compare ensuite la combinaison actuelle à la meilleure combinaison trouvée jusqu'à présent
-        if utilite_totale(combinaison) > utilite_totale(meilleure_combinaison):
+        if utilite_totale2(combinaison) > utilite_totale2(meilleure_combinaison):
             #si la combinaison actuelle est meilleure, on la remplace par la meilleure combinaison
-            if masse_totale(combinaison) <= (c+0.0000000000000001): #on ajoute une petite marge d'erreur pour éviter les erreurs d'arrondi car en python les nombres flottants ne sont pas toujours exacts
+            if masse_totale2(combinaison) <= (c+0.0000000000000001): #on ajoute une petite marge d'erreur pour éviter les erreurs d'arrondi car en python les nombres flottants ne sont pas toujours exacts
                 meilleure_combinaison = combinaison
 
     return meilleure_combinaison
 
 
 start_exact = time.time()
-meilleure_combinaison = force_brute(objets_2, 0.6)
+meilleure_combinaison = force_brute2(objets_2, 0.6)
 end_exact = time.time()
 noms_objets = [objet["Nom"] for objet in meilleure_combinaison]
-utilite_max = utilite_totale(meilleure_combinaison)
-new_weight = masse_totale(meilleure_combinaison)
+utilite_max = utilite_totale2(meilleure_combinaison)
+new_weight = masse_totale2(meilleure_combinaison)
 
 print(f"\n\nMeilleure combinaison d'objets: {noms_objets}")
 print(f"Utilité totale: {utilite_max}")
@@ -354,12 +444,6 @@ print(f"Poids total: {new_weight} \n")
 temps_A_exact = end_exact - start_exact
 
 print(f"Temps d'exécution de l'algorithme A: {temps_A_exact} secondes\n\n")
-
-
-# temps_single = mesure_temps(force_brute, objets_2, 0.6)
-# print(f"Temps pour une seule exécution: {temps_single} secondes")
-#print(f"Temps moyen avec répétition exécutions: {temps_multiple} secondes\n\n")
-# environ 15.3 seconde varie en fonction des pc 33 seconde pour lea
 
 
 
@@ -376,7 +460,7 @@ On étudie notre algorithme en choisissant différentes valeurs de C, pour ainsi
 
 print("\n\n-------------------QUESTION 10 11 12:----------------------\n\n")
 
-t = 10 ** -6  # On fixe une constante d'exécution égale à 1 microseconde pour chaque opération
+
 
 
 def maximiser_utilite(objets, c, t):
@@ -442,10 +526,12 @@ for i in diff_capa:
     c = int(i * 100)
     sac_glout, poids_tot_glout, util_tot_glout, temps_glout = maximiser_utilite(objets_2, c, t)
     sac_naif, poids_tot_naif, util_tot_naif, temps_naif = algo_naif(c, objets_2, t)
-
-
+    best_comb, temps_brut = force_brute(objets_2, c)
+    utilite_max = utilite_totale(best_comb, temps_brut)
     print(f"Algo glouton => Capacité : {c/100}, Utilité : {util_tot_glout/100}, Temps : {temps_glout}")
-    print(f"Algo naïf => Capacité : {c / 100}, Utilité : {util_tot_naif / 100}, Temps : {temps_naif}\n")
+    print(f"Algo naïf => Capacité : {c / 100}, Utilité : {util_tot_naif / 100}, Temps : {temps_naif}")
+    print(f"Algo force brute => Capacité : {c / 100}, Utilité : {utilite_max / 100}, Temps : {temps_brut}\n")
+
 
 
     # temps_single, temps_multiple = mesure_temps(maximiser_utilite, objets_2, c)
