@@ -171,7 +171,8 @@ def nb_wagons_offline_d1(marchandises, wagon_longueur=11.583):
                 break
         else:
             wagons.append([i["Longueur"]])
-    return len(wagons)
+    unused_space = sum(wagon_longueur - sum(wagon) for wagon in wagons)
+    return len(wagons), unused_space
 
 '''
 d1 = prise en compte seulement de la longueur des marchandises.
@@ -200,7 +201,8 @@ def nb_wagons_online_d1(dico, wagon_longueur=11.583):
                 break
         else:
             wagons.append([i["Longueur"]]) # il y a [i["Longueur"]] car on ne peut pas mettre un int dans une liste donc ce qui rentre dans la liste est une liste
-    return len(wagons), wagons
+    unused_space = sum(wagon_longueur - sum(wagon) for wagon in wagons)
+    return len(wagons), wagons, unused_space
 
 
 
@@ -266,8 +268,8 @@ def nb_wagons_offline_d2(dico, wagon_longueur=11.583, wagon_largeur=2.294):
         if not placed:
             # Si la marchandise n'a pas pu être placée dans les wagons existants, on crée un nouveau wagon
             wagons.append([{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Items": [item]}])
-
-    return wagons, len(wagons)
+    unused_space = sum((wagon_longueur * wagon_largeur) - sum(s["Longueur"] * s["Largeur"] for s in wagon) for wagon in wagons)
+    return wagons, len(wagons), unused_space
 
 
 def nb_wagons_online_d2(dico, wagon_longueur=11.583, wagon_largeur=2.294):
@@ -296,8 +298,8 @@ def nb_wagons_online_d2(dico, wagon_longueur=11.583, wagon_largeur=2.294):
         if not placed:
             # Si la marchandise n'a pas pu être placée dans les wagons existants, on crée un nouveau wagon
             wagons.append([{"Longueur": item["Longueur"], "Largeur": item["Largeur"]}])
-
-    return len(wagons)
+    unused_space = sum((wagon_longueur * wagon_largeur) - sum(s["Longueur"] * s["Largeur"] for s in wagon) for wagon in wagons)
+    return len(wagons), unused_space
 
 # Affichage
 
@@ -419,8 +421,8 @@ def nb_wagons_offline_d3(dico, wagon_longueur=11.583, wagon_largeur=2.294, wagon
         if not placed:
             # Si la marchandise ne rentre pas dans les wagons existants, création d'un nouveau wagon
             wagons.append([[{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}]])
-
-    return wagons, len(wagons)
+    unused_space = sum((wagon_largeur * wagon_longueur * wagon_hauteur) - sum(s["Largeur"] * s["Longueur"] * s["Hauteur"] for s in sum(wagon, [])) for wagon in wagons)
+    return wagons, len(wagons), unused_space
 
 
 
@@ -458,8 +460,8 @@ def nb_wagons_online_d3(dico, wagon_longueur=11.583, wagon_largeur=2.294, wagon_
         if not placed:
             # Si la marchandise ne rentre pas dans les wagons existants, création d'un nouveau wagon
             wagons.append([[{"Longueur": item["Longueur"], "Largeur": item["Largeur"], "Hauteur": item["Hauteur"], "Items": [item]}]])
-
-    return wagons, len(wagons)
+    unused_space = sum((wagon_largeur * wagon_longueur * wagon_hauteur) - sum(s["Largeur"] * s["Longueur"] * s["Hauteur"] for s in sum(wagon, [])) for wagon in wagons)
+    return wagons, len(wagons), unused_space
 
 
 
@@ -521,22 +523,39 @@ print(f"Temps d'exécution pour nb_wagons_online_d3: {temps_d3_o_single:.6f}, {t
 """(Difficile) Pour aller plus loin, vous pourriez essayer d’obtenir des informations sur sa complexité
 (complexité au pire, borne supérieure ...)"""
 
-wagon_offline_d1 = nb_wagons_offline_d1(marchandises)
-wagon_online_d1, wagon_detail = nb_wagons_online_d1(marchandises)
+wagon_offline_d1, _ = nb_wagons_offline_d1(marchandises)
+wagon_online_d1, wagon_detail, _ = nb_wagons_online_d1(marchandises)
 print(f"Le nombre de wagons pour d = 1 en offline : {wagon_offline_d1}")
 print(f"Le nombre de wagons pour d = 1 en online : {wagon_online_d1}\n")
 print(f"Voici le contenu des wagons pour d = 1 en oline : {wagon_detail}\n\n")
 
-wagon_offline_d2, wagon_detail = nb_wagons_offline_d2(marchandises)
-wagon_online_d2 = nb_wagons_online_d2(marchandises)
+wagon_offline_d2, wagon_detail, _ = nb_wagons_offline_d2(marchandises)
+wagon_online_d2, _ = nb_wagons_online_d2(marchandises)
 print(f"Le nombre de wagons pour d = 2 en offline : {wagon_detail}")
 print(f"Le nombre de wagons pour d = 2 en online : {wagon_online_d2}\n")
 print(f"Voici le contenu des wagons pour d = 2 en offline : {wagon_offline_d2}\n\n")
 
 
-details_wagons, num_wagons = nb_wagons_offline_d3(marchandises)
+details_wagons, num_wagons, _ = nb_wagons_offline_d3(marchandises)
 print(f"Le nombre de wagons pour d = 3 en offline : {num_wagons}")
 #print(f"Voici le contenu des wagons pour d = 3 en offline : {details_wagons}")
-details_wagons, num_wagons = nb_wagons_online_d3(marchandises)
+details_wagons, num_wagons, _ = nb_wagons_online_d3(marchandises)
 print(f"Le nombre de wagons pour d = 3 en online : {num_wagons}")
 #print(f"Voici le contenu des wagons pour d = 3 en offline : {details_wagons}")
+
+'''
+espace restant dans chacune de mes fonctions
+'''
+_, unused_space_d1 = nb_wagons_offline_d1(marchandises)
+_, _, unused_space_d1_o = nb_wagons_online_d1(marchandises)
+_, _, unused_space_d2 = nb_wagons_offline_d2(marchandises)
+_, unused_space_d2_o = nb_wagons_online_d2(marchandises)
+_, _, unused_space_d3 = nb_wagons_offline_d3(marchandises)
+_, _, unused_space_d3_o = nb_wagons_online_d3(marchandises)
+
+print(f"\n\n\nespace restant pour d = 1 en offline : {unused_space_d1}")
+print(f"espace restant pour d = 1 en online : {unused_space_d1_o}\n")
+print(f"espace restant pour d = 2 en offline : {unused_space_d2}")
+print(f"espace restant pour d = 2 en online : {unused_space_d2_o}\n")
+print(f"espace restant pour d = 3 en offline : {unused_space_d3}")
+print(f"espace restant pour d = 3 en online : {unused_space_d3_o}")
